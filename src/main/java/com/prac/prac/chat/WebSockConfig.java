@@ -1,22 +1,24 @@
 package com.prac.prac.chat;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.WebSocketHandler;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
+import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
-@RequiredArgsConstructor
 @Configuration
-@EnableWebSocket   //이게 websocket 서버로서 동작하겠다는 @
-public class WebSockConfig implements WebSocketConfigurer { //채팅구현은 2개. messageBroker랑 그냥 Configuer
-    private final WebSocketHandler webSocketHandler;
+@EnableWebSocketMessageBroker  // websocket서버로서 동작하겠다.. 근데  이제 Stomp가 적용돼서 MessageBroker로서 
+public class WebSockConfig implements WebSocketMessageBrokerConfigurer { //implements된 interface도 MessageBroker기능이 있는걸로
 
     @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(webSocketHandler, "/ws/chat").setAllowedOrigins("*");
-        // handler 등록,   js에서 new Websocket할 때 경로 지정
-        //다른 url에서도 접속할 수있게(CORS방지)
+    public void configureMessageBroker(MessageBrokerRegistry config) {
+        config.enableSimpleBroker("/sub");  //ws.subscribe() 의 uri
+        config.setApplicationDestinationPrefixes("/pub");
+    }
+
+    @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ws-stomp").setAllowedOriginPatterns("*")   //setAllow 메소드이름이 바뀌었다.
+                .withSockJS();
     }
 }
